@@ -1,0 +1,13 @@
+---
+apiVersion: v1
+kind: ServiceAccount
+
+metadata:
+    name: {{ .Values.openvpn.serviceAccountName }}
+
+---
+apiVersion: v1
+kind: ServiceAccount
+
+metadata:
+    name: {{ .Values.api.serviceAccountName }}

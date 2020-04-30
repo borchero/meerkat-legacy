@@ -1,0 +1,67 @@
+---
+apiVersion: v1
+kind: ConfigMap
+
+metadata:
+    name: {{ .Release.Name }}-api-env
+
+data:
+    DB_CONNECTION_FILE: /vault/secrets/db.txt
+    VAULT_HOST: {{ .Values.api.vault.host | quote }}
+    VAULT_PORT: {{ .Values.api.vault.port | quote }}
+    VAULT_PKI: {{ .Values.openvpn.vault.pki.path }}
+    VAULT_TLS_AUTH: {{ .Values.openvpn.vault.ta}}
+    VPN_HOST: {{ .Values.openvpn.config.host }}
+    VPN_PORT: {{ include "vpn.port" .Values.openvpn.service }}
+    VPN_PROTOCOL: {{ .Values.openvpn.service.protocol | lower }}
+    VPN_AUTH: {{ .Values.openvpn.config.auth }}
+    VPN_CIPHER: {{ .Values.openvpn.config.cipher }}
+
+---
+apiVersion: v1
+kind: ConfigMap
+
+metadata:
+    name: {{ .Release.Name }}-vpn-conf
+
+data:
+    server.conf: |
+        user nobody
+        group nogroup
+
+        status /tmp/openvpn.log
+        explicit-exit-notify 1
+
+        server 192.168.255.0 255.255.255.0
+        port 1194
+        proto {{ .Values.openvpn.service.protocol | lower }}
+        dev tun0
+
+        cert /vault/secrets/server.crt
+        key /vault/secrets/server.key
+        ca /vault/secrets/ca.crt
+        dh /vault/secrets/shared-dh.pem
+        tls-crypt /vault/secrets/shared-ta.key
+        crl-veriy /vault/secrets/crl.pem
+
+        auth {{ .Values.openvpn.config.auth }}
+        cipher {{ .Values.openvpn.config.cipher }}
+
+        keepalive 10 60
+        key-direction 0
+        persist-key
+        persist-tun
+        verb 3
+
+        compress lz4-v2
+        push "compress lz4-v2"
+        push "comp-lzo no"
+
+        push "route 192.168.255.0 255.255.255.0"
+        push "route 10.0.0.0 255.0.0.0"
+        push "dhcp-option DNS 8.8.8.8"
+        push "dhcp-option DNS 8.8.4.4"
+
+        {{- if .Values.openvpn.config.tunnelAllTraffic }}
+        push "redirect-gateway def1"
+        {{- end }}

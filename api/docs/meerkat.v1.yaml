@@ -1,0 +1,330 @@
+openapi: 3.0.0
+info:
+  title: Meerkat API
+  version: '0.1'
+  description: |-
+    The Meerkat API serves as an administrator API to manage user access to the OpenVPN server.
+
+    Authentication is simple and access should only be given to trusted entities.
+  contact:
+    name: Oliver Borchert
+    email: borchero@icloud.com
+servers:
+  - url: 'http://localhost:3000'
+    description: Development Server
+paths:
+  /users:
+    post:
+      summary: Create User
+      operationId: post-users
+      responses:
+        '201':
+          description: User has been created successfully.
+          content:
+            application/json:
+              schema:
+                type: object
+        '400':
+          description: Validation of parameters failed.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+        '409':
+          description: User already exists.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      tags:
+        - Users
+      description: Create a new user for which devices may be added to generate credentials.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  description: 'The identifying name. Must be of the format `<firstname>.<lastname>` with non-capital letters.'
+                  minLength: 5
+                  maxLength: 63
+              required:
+                - name
+        description: ''
+    parameters: []
+    get:
+      summary: List Users
+      operationId: get-users
+      responses:
+        '200':
+          description: Users have been retrieved successfully.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/User'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      tags:
+        - Users
+      description: List all users (deleted and existing) and their devices for which credentials exist or have been revoked.
+      parameters: []
+  '/users/{userId}':
+    parameters:
+      - schema:
+          type: string
+        name: userId
+        in: path
+        required: true
+    delete:
+      summary: Delete User
+      operationId: delete-users-id
+      responses:
+        '204':
+          description: The user has been deleted successfully.
+        '404':
+          description: The user could not be found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '412':
+          description: The user has already been deleted.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      tags:
+        - Users
+      description: Delete this user and revoke all certificates associated with the account.
+  '/users/{userId}/devices':
+    parameters:
+      - schema:
+          type: string
+        name: userId
+        in: path
+        required: true
+    post:
+      summary: Generate Certificate
+      operationId: post-users-id-devices
+      responses:
+        '201':
+          description: The certificate has been issued successfully.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  certificate:
+                    type: string
+                    description: 'The OpenVPN client certificate. **The certificate is only available here. It should be stored and distributed securely. It cannot be recreated.**'
+                required:
+                  - certificate
+        '400':
+          description: Validation of parameters failed.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+        '404':
+          description: The user could not be found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: Device for user already exists.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '412':
+          description: The user has already been deleted.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      description: Create a new certificiate associated with a user for a specific device.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  minLength: 5
+                  maxLength: 63
+                  description: The name identifying the device uniquely for the user.
+              required:
+                - name
+      tags:
+        - Certificates
+  '/users/{userId}/devices/{deviceId}':
+    parameters:
+      - schema:
+          type: string
+        name: userId
+        in: path
+        required: true
+      - schema:
+          type: string
+        name: deviceId
+        in: path
+        required: true
+    delete:
+      summary: Revoke Certificate
+      operationId: delete-users-userId-devices-deviceId
+      responses:
+        '204':
+          description: Certificate has been revoked successfully.
+        '404':
+          description: The user or device could not be found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '412':
+          description: The user or device have already been deleted.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      description: Revoke the certificate associated with a device.
+      tags:
+        - Certificates
+components:
+  schemas:
+    User:
+      title: User
+      type: object
+      description: A representation of the User and its properties.
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: The unique ID of the user as assigned by the system.
+        name:
+          type: string
+          description: "The user's name (possibly not unique)."
+        devices:
+          type: array
+          description: All devices that are registered for the user or have been registered in the past.
+          items:
+            $ref: '#/components/schemas/Device'
+        deleted_at:
+          type: string
+          description: This field is present whenever the user ahs been deleted and access to all devices has been revoked.
+          format: date-time
+        created_at:
+          type: string
+          description: The date at which the user was added to the system.
+          format: date-time
+      required:
+        - id
+        - name
+        - created_at
+        - devices
+      x-examples: {}
+    Device:
+      title: Device
+      type: object
+      description: A representation of a device belonging to a user.
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: The globally unique ID assigned to the device by the system.
+        name:
+          type: string
+          description: The common name of the device.
+        created_at:
+          type: string
+          format: date-time
+          description: The date at which access for this device has been granted.
+        deleted_at:
+          type: string
+          format: date-time
+          description: The date at which access for the device has been revoked.
+      required:
+        - id
+        - name
+        - created_at
+    Error:
+      title: Error
+      type: object
+      description: A representation of a generic error.
+      properties:
+        message:
+          type: string
+          description: The message describing the error in detail.
+      required:
+        - message
+    ValidationError:
+      title: ValidationError
+      type: object
+      description: A representation of an error resulting from invalid client parameters.
+      properties:
+        message:
+          type: string
+          description: The message conveying that validation failed.
+        errors:
+          type: array
+          description: The validation errors that occured.
+          items:
+            type: object
+            properties:
+              property:
+                type: string
+                description: The name of the property that failed validation.
+              reasons:
+                type: array
+                description: The reason(s) why the validation failed.
+                items:
+                  type: string
+            required:
+              - property
+              - reasons
+      required:
+        - message
+        - errors
+  securitySchemes:
+    Admin Credentials:
+      type: http
+      scheme: basic
+security:
+  - Basic Authentication: []
+tags:
+  - name: Users
+  - name: Certificates

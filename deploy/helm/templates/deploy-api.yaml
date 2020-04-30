@@ -1,0 +1,43 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+
+metadata:
+    name: {{ .Release.Name }}-api
+
+spec:
+    replicas: 1
+    strategy:
+        type: RollingUpdate
+    selector:
+        matchLabels:
+            app.kubernetes.io/name: {{ .Release.Name }}-api
+
+    template:
+        metadata:
+            labels:
+                app.kubernetes.io/name: {{ .Release.Name }}-api
+            annotations:
+                vault.hashicorp.com/agent-inject: "true"
+                {{ $db := .Values.api.postgres }}
+                {{- with .Values.api.vault }}
+                vault.hashicorp.com/role: {{ .role }}
+
+                vault.hashicorp.com/agent-inject-secret-db.txt: {{ .databaseRole }}
+                vault.hashicorp.com/agent-inject-template-db.txt: |
+                    {{ include "database.connection" dict "secret" .databaseRole "config" $db }}
+                {{- end }}
+
+        spec:
+            serviceAccountName: {{ .Values.api.serviceAccountName }}
+            containers:
+            -   name: api
+                image: {{ .Values.api.image.name }}:{{ .Values.api.image.tag }}
+                imagePullPolicy: {{ .Values.api.image.pullPolicy }}
+                envFrom:
+                -   configMapRef:
+                        name: {{ .Release.Name }}-api-env
+                ports:
+                -   name: node
+                    containerPort: 3000
+                    protocol: TCP

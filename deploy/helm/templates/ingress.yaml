@@ -1,0 +1,52 @@
+{{- if .Values.api.ingress.enabled }}
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+
+metadata:
+    name: {{ .Release.Name }}-api
+
+spec:
+    entryPoints: {{ .Values.api.ingress.entrypoints }}
+    routes:
+    -   kind: Rule
+        match: Host(`{{ .Values.ingress.host }}`)
+        middlewares:
+        -   name: {{ .Release.Name }}-api-basic-auth
+            namespace: {{ .Release.Namespace }}
+        services:
+        -   kind: Service
+            name: {{ .Release.Name }}
+            namespace: {{ .Release.Namespace }}
+            port: {{ .Values.api.service.port }}
+        {{- if .Values.api.dns.enabled }}
+        tls:
+            secretName: {{ .Release.Name }}-api-tls
+        {{- end }}
+
+{{- if .Values.ingress.auth.enabled }}
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: Middleware
+
+metadata:
+    name: {{ .Release.Name }}-api-basic-auth
+
+spec:
+    basicAuth:
+        secret: {{ .Release.Name }}-api-basic-auth-credentials
+        removeHeader: true
+
+---
+apiVersion: v1
+kind: Secret
+
+metadata:
+    name: {{ .Release.Name }}-api-basic-auth-credentials
+
+stringData:
+    users: |
+        {{- .Values.api.ingress.auth.users | indent 8 }}
+
+{{- end }}
+{{- end }}

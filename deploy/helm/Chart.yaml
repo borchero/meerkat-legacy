@@ -1,0 +1,13 @@
+apiVersion: v2
+type: application
+name: meerkat
+version: ${CIRCLE_TAG}
+description: Cloud-native OpenVPN deployment with Vault PKI.
+maintainers:
+-   name: Oliver Borchert
+    email: borchero@icloud.com
+keywords:
+-   networks
+-   vpn
+-   openvpn
+-   vault
