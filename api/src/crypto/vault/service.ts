@@ -12,28 +12,12 @@ export class VaultService {
         this.vault = vault({
             apiVersion: this.config.get<string>('vault.version'),
             endpoint: this.config.get<string>('vault.endpoint'),
+            token: this.config.get<string>('vault.token')
         });
     }
 
-    async authenticate(): Promise<void> {
-        // First, try to get the token directly
-        var token = this.config.get<string>('vault.token');
-        if (!token) {
-            // If this is not possible, we login via Kubernetes
-            const jwt = fs.readFileSync('/var/run/secrets/kubernetes.io/serviceaccount/token');
-            const result = await this.vault.kubernetesLogin({
-                role: this.config.get<string>('vault.role'),
-                jwt: jwt,
-            });
-            console.log(result);
-        }
-
-        // Eventually, we can set thhe client's token
-        this.vault.token = token;
-    }
-
     async readTlsAuth(): Promise<string> {
-        const path = this.config.get<string>('vault.ta');
+        const path = this.config.get<string>('vault.tlsAuth');
         const content = await this.vault.read(path);
         return content;
     }

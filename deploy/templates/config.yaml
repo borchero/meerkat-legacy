@@ -8,11 +8,14 @@ metadata:
 data:
     DB_CONNECTION_FILE: /vault/secrets/db-credentials
 
+    VAULT_SCHEME: https
     VAULT_HOST: {{ .Values.vault.host }}
     VAULT_PORT: {{ .Values.vault.port | quote }}
     VAULT_PKI: {{ .Values.vault.paths.pki }}
-    VAULT_TLS_AUTH: {{ .Values.vault.paths.kv }}/tls-auth
+    VAULT_TLS_AUTH: {{ .Values.vault.paths.kv }}/data/tls-auth
+    VAULT_TOKEN_FILE: /vault/secrets/token
 
+    VPN_DEVICE: tun
     VPN_HOST: {{ .Values.dns.subdomains.vpn }}.{{ .Values.dns.domain }}
     VPN_PORT: {{ include "vpn.port" .Values.vpn.service }}
     VPN_PROTOCOL: {{ .Values.vpn.service.protocol | lower }}
