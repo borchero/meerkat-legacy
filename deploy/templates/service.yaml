@@ -31,7 +31,7 @@ spec:
     -   protocol: {{ .Values.vpn.service.protocol | upper }}
         port: {{ .Values.vpn.service.port }}
         targetPort: 1194
-        {{- if eq .Values.vpn.service.type "NodePort" -}}
+        {{ if eq .Values.vpn.service.type "NodePort" -}}
         nodePort: {{ .Values.vpn.service.nodePort }}
-        {{- end -}}
+        {{ end -}}
     
