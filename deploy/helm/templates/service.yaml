@@ -23,15 +23,15 @@ metadata:
     name: {{ .Release.Name }}-vpn
 
 spec:
-    type: {{ .Values.openvpn.service.type }}
+    type: {{ .Values.vpn.service.type }}
     selector:
         app.kubernetes.io/name: {{ .Release.Name }}-vpn
 
     ports:
-    -   protocol: {{ .Values.openvpn.service.protocol }}
-        port: {{ .Values.openvpn.service.port }}
+    -   protocol: {{ .Values.vpn.service.protocol | upper }}
+        port: {{ .Values.vpn.service.port }}
         targetPort: 1194
-        {{- if eq .Values.openvpn.service.type "NodePort" }}
-        nodePort: {{ .Values.openvpn.service.nodePort }}
-        {{- end }}
+        {{- if eq .Values.vpn.service.type "NodePort" -}}
+        nodePort: {{ .Values.vpn.service.nodePort }}
+        {{- end -}}
     

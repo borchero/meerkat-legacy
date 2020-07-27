@@ -19,14 +19,9 @@ spec:
                 app.kubernetes.io/name: {{ .Release.Name }}-api
             annotations:
                 vault.hashicorp.com/agent-inject: "true"
-                {{ $db := .Values.api.postgres }}
-                {{- with .Values.api.vault }}
-                vault.hashicorp.com/role: {{ .role }}
-
-                vault.hashicorp.com/agent-inject-secret-db.txt: {{ .databaseRole }}
-                vault.hashicorp.com/agent-inject-template-db.txt: |
-                    {{ include "database.connection" dict "secret" .databaseRole "config" $db }}
-                {{- end }}
+                vault.hashicorp.com/agent-inject-token: "true"
+                vault.hashicorp.com/role: {{ .Values.vault.roles.api }}
+                {{ include "vault.database" . | indent 16 }}
 
         spec:
             serviceAccountName: {{ .Values.api.serviceAccountName }}

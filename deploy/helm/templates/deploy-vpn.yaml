@@ -19,52 +19,32 @@ spec:
                 app.kubernetes.io/name: {{ .Release.Name }}-vpn
             annotations:
                 vault.hashicorp.com/agent-inject: "true"
-                {{ $cn := .Values.openvpn.config.host }}
-                {{- with .Values.openvpn.vault }}
-                vault.hashicorp.com/role: {{ .role }}
-
-                vault.hashicorp.com/agent-inject-secret-shared-dh.pem: {{ .dh }}
-                vault.hashicorp.com/agent-inject-template-shared-dh.pem: |
-                    {{ include "vault.kv-value" .dh }}
-                vault.hashicorp.com/agent-inject-secret-shared-ta.key: {{ .ta }}
-                vault.hashicorp.com/agent-inject-template-shared-ta.key: |
-                    {{ include "vault.kv-value" .ta }}
-
-                vault.hashicorp.com/agent-inject-secret-server.crt: {{ .pki.issuer }}
-                vault.hashicorp.com/agent-inject-template-server.crt: |
-                    {{ $data := dict "secret" .pki.issuer "cn" $cn "out" "certificate" }}
-                    {{ include "vault.pki" $data }}
-                vault.hashicorp.com/agent-inject-secret-server.key: {{ .pki.issuer }}
-                vault.hashicorp.com/agent-inject-template-server.key: |
-                    {{ $data := dict "secret" .pki.issuer "cn" $cn "out" "private_key" }}
-                    {{ include "vault.pki" $data }}
-                vault.hashicorp.com/agent-inject-secret-ca.crt: {{ .pki.issuer }}
-                vault.hashicorp.com/agent-inject-template-ca.crt: |
-                    {{ $data := dict "secret" .pki.issuer "cn" $cn "out" "issuing_ca" }}
-                    {{ include "vault.pki" $data }}
-
-                vault.hashicorp.com/agent-inject-secret-crl.pem: {{ .pki.crl }}
-                {{- end }}
+                vault.hashicorp.com/role: {{ .Values.vault.roles.vpn }}
+                {{ include "vault.kv-value" (dict "root" $ "name" "dh-params") | indent 16 }}
+                {{ include "vault.kv-value" (dict "root" $ "name" "tls-auth") | indent 16 }}
+                {{ include "vault.pki-cert" (dict "root" $ "name" "certificate") | indent 16 }}
+                {{ include "vault.pki-cert" (dict "root" $ "name" "private_key") | indent 16 }}
+                {{ include "vault.pki-cert" (dict "root" $ "name" "issuing_ca") | indent 16 }}
+                vault.hashicorp.com/agent-inject-secret-crl: {{ .Values.vault.paths.pki }}/crl/pem
 
         spec:
-            serviceAccountName: {{ .Values.openvpn.serviceAccountName }}
+            serviceAccountName: {{ .Values.vpn.serviceAccountName }}
             containers:
             -   name: vpn
-                image: {{ .Values.openvpn.image.name }}:{{ .Values.openvpn.image.tag }}
-                imagePullPolicy: {{ .Values.openvpn.image.pullPolicy }}
-                args: ["openvpn", "--config", "/etc/openvpn/server.conf"]
+                image: {{ .Values.vpn.image.name }}:{{ .Values.vpn.image.tag }}
+                imagePullPolicy: {{ .Values.vpn.image.pullPolicy }}
+                command: ["openvpn", "--config", "/etc/openvpn/server.conf"]
                 securityContext:
                     capabilities:
                         add: ["NET_ADMIN"]
                 ports:
                 -   name: openvpn
                     containerPort: 1194
-                    protocol: {{ .Values.openvpn.service.protocol }}
+                    protocol: {{ .Values.vpn.service.protocol | upper }}
                 volumeMounts:
                 -   name: server-config
                     mountPath: /etc/openvpn
                     readOnly: true
-
             volumes:
             -   name: server-config
                 configMap:

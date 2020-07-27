@@ -6,16 +6,18 @@ metadata:
     name: {{ .Release.Name }}-api-env
 
 data:
-    DB_CONNECTION_FILE: /vault/secrets/db.txt
-    VAULT_HOST: {{ .Values.api.vault.host | quote }}
-    VAULT_PORT: {{ .Values.api.vault.port | quote }}
-    VAULT_PKI: {{ .Values.openvpn.vault.pki.path }}
-    VAULT_TLS_AUTH: {{ .Values.openvpn.vault.ta}}
-    VPN_HOST: {{ .Values.openvpn.config.host }}
-    VPN_PORT: {{ include "vpn.port" .Values.openvpn.service }}
-    VPN_PROTOCOL: {{ .Values.openvpn.service.protocol | lower }}
-    VPN_AUTH: {{ .Values.openvpn.config.auth }}
-    VPN_CIPHER: {{ .Values.openvpn.config.cipher }}
+    DB_CONNECTION_FILE: /vault/secrets/db-credentials
+
+    VAULT_HOST: {{ .Values.vault.host }}
+    VAULT_PORT: {{ .Values.vault.port | quote }}
+    VAULT_PKI: {{ .Values.vault.paths.pki }}
+    VAULT_TLS_AUTH: {{ .Values.vault.paths.kv }}/tls-auth
+
+    VPN_HOST: {{ .Values.dns.subdomains.vpn }}.{{ .Values.dns.domain }}
+    VPN_PORT: {{ include "vpn.port" .Values.vpn.service }}
+    VPN_PROTOCOL: {{ .Values.vpn.service.protocol | lower }}
+    VPN_AUTH: {{ .Values.vpn.config.auth }}
+    VPN_CIPHER: {{ .Values.vpn.config.cipher }}
 
 ---
 apiVersion: v1
@@ -34,18 +36,18 @@ data:
 
         server 192.168.255.0 255.255.255.0
         port 1194
-        proto {{ .Values.openvpn.service.protocol | lower }}
+        proto {{ .Values.vpn.service.protocol | lower }}
         dev tun0
 
-        cert /vault/secrets/server.crt
-        key /vault/secrets/server.key
-        ca /vault/secrets/ca.crt
-        dh /vault/secrets/shared-dh.pem
-        tls-crypt /vault/secrets/shared-ta.key
-        crl-veriy /vault/secrets/crl.pem
+        cert /vault/secrets/certificate
+        key /vault/secrets/private_key
+        ca /vault/secrets/issuing_ca
+        dh /vault/secrets/dh-params
+        tls-crypt /vault/secrets/tls-auth
+        crl-verify /vault/secrets/crl
 
-        auth {{ .Values.openvpn.config.auth }}
-        cipher {{ .Values.openvpn.config.cipher }}
+        auth {{ .Values.vpn.config.auth }}
+        cipher {{ .Values.vpn.config.cipher }}
 
         keepalive 10 60
         key-direction 0
@@ -62,6 +64,6 @@ data:
         push "dhcp-option DNS 8.8.8.8"
         push "dhcp-option DNS 8.8.4.4"
 
-        {{- if .Values.openvpn.config.tunnelAllTraffic }}
+        {{- if .Values.vpn.config.tunnelAllTraffic }}
         push "redirect-gateway def1"
         {{- end }}

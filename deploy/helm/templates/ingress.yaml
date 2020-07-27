@@ -10,7 +10,7 @@ spec:
     entryPoints: {{ .Values.api.ingress.entrypoints }}
     routes:
     -   kind: Rule
-        match: Host(`{{ .Values.ingress.host }}`)
+        match: Host(`{{ .Values.dns.subdomains.api }}.{{ .Values.dns.domain }}`)
         middlewares:
         -   name: {{ .Release.Name }}-api-basic-auth
             namespace: {{ .Release.Namespace }}
@@ -24,7 +24,7 @@ spec:
             secretName: {{ .Release.Name }}-api-tls
         {{- end }}
 
-{{- if .Values.ingress.auth.enabled }}
+{{- if .Values.api.ingress.auth.enabled }}
 ---
 apiVersion: traefik.containo.us/v1alpha1
 kind: Middleware
@@ -46,7 +46,9 @@ metadata:
 
 stringData:
     users: |
-        {{- .Values.api.ingress.auth.users | indent 8 }}
+        {{ range .Values.api.ingress.auth.users -}}
+        {{ . }}
+        {{ end -}}
 
 {{- end }}
 {{- end }}

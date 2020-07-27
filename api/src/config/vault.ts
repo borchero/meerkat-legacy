@@ -7,8 +7,8 @@ export default () => {
             endpoint: `${host}:${port}`,
             token: process.env.VAULT_TOKEN,
             role: process.env.VAULT_ROLE,
-            pki: process.env.VAULT_PKI || 'pki/meerkat',
-            ta: process.env.VAULT_TLS_AUTH || 'kv/meerkat/data/tls-auth',
+            pki: process.env.VAULT_PKI || 'meerkat/pki',
+            ta: process.env.VAULT_TLS_AUTH || 'meerkat/kv/data/tls-auth',
         },
     };
 };

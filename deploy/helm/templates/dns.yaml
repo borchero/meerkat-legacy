@@ -1,6 +1,6 @@
 {{- if .Values.api.dns.enabled }}
 ---
-apiVersion: switchboard.borchero.com
+apiVersion: switchboard.borchero.com/v1alpha1
 kind: DNSRecord
 
 metadata:
@@ -12,36 +12,38 @@ spec:
         certificateName: {{ .Release.Name }}-api
         secretName: {{ .Release.Name }}-api-tls
         issuer:
-            kind: {{ .Values.api.dns.tls.issuer.kind }}
-            name: {{ .Values.api.dns.tls.issuer.name }}
+            kind: {{ required "tls issuer kind required" .Values.api.dns.tls.issuer.kind }}
+            name: {{ required "tls issuer name required" .Values.api.dns.tls.issuer.name }}
     zones:
     {{- range $i, $val := .Values.api.dns.zones }}
     -   name: {{ $val }}
     {{- end }}
 {{- end }}
 
-{{- if .Values.openvpn.dns.enabled }}
+{{- if .Values.vpn.dns.enabled }}
 ---
-apiVersion: switchboard.borchero.com
+apiVersion: switchboard.borchero.com/v1alpha1
 kind: DNSRecord
 
 metadata:
     name: {{ .Release.Name }}-vpn
 
 spec:
-    hosts: ["{{ .Values.openvpn.dns.subdomain }}"]
+    hosts: ["{{ .Values.dns.subdomains.vpn }}"]
     zones:
-    -   name: {{ .Values.openvpn.dns.zone }}
-        {{- if eq .Values.openvpn.dns.ip.kind "serviceIP" }}
+    {{ range .Values.vpn.dns.zones -}}
+    -   name: {{ . }}
+        {{- if eq $.Values.vpn.dns.ip.kind "serviceIP" }}
         serviceIP:
-            name: {{ .Release.Name }}-vpn
-            namespace: {{ .Release.Namespace }}
+            name: {{ $.Release.Name }}-vpn
+            namespace: {{ $.Release.Namespace }}
             type: ExternalIP
-        {{- else if eq .Values.openvpn.dns.ip.kind "nodeIP" }}
+        {{- else if eq $.Values.vpn.dns.ip.kind "nodeIP" }}
         nodeIP:
             matchLabels:
-                {{- toYaml .Values.openvpn.dns.ip.nodeLabels | indent 12 }}
+                {{- toYaml $.Values.vpn.dns.ip.nodeLabels | indent 12 }}
             type: ExternalIP
         {{- end }}
+    {{ end -}}
 
 {{- end }}
