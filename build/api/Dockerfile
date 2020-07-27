@@ -1,7 +1,7 @@
-FROM node:13.13.0-alpine3.10
+FROM node:14.5.0-alpine3.10
 
 WORKDIR /app
-COPY package.json /app/package.json
+COPY api/package.json /app/package.json
 RUN npm install --loglevel verbose
 
 COPY api /app

@@ -27,7 +27,7 @@ vpn:
     serviceAccountName: meerkat-vpn
     image:
         name: borchero/meerkat-vpn
-        tag: 0.1.0
+        tag: ${CIRCLE_TAG}
         pullPolicy: IfNotPresent
     config:
         tunnelAllTraffic: false
@@ -49,7 +49,7 @@ api:
     serviceAccountName: meerkat-api
     image:
         name: borchero/meerkat-api
-        tag: 0.1.0
+        tag: ${CIRCLE_TAG}
         pullPolicy: IfNotPresent
     service:
         type: ClusterIP
