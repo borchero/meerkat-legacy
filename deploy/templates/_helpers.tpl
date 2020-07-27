@@ -22,7 +22,7 @@ vault.hashicorp.com/agent-inject-template-{{ .name }}: |
 vault.hashicorp.com/agent-inject-secret-database: {{ $database }}
 vault.hashicorp.com/agent-inject-template-database: |
     {{"{{"}}- with secret "{{ $database }}" {{"}}"}}
-    postgres://{{"{{"}} .Data.username {{"}}"}}:{{"{{"}} .Data.password {{"}}"}}@{{ required "datbase host required" .Values.postgres.host }}:{{ .Values.postgres.port }}/{{ .Values.postgres.database }}
+    postgres://{{"{{"}} .Data.username {{"}}"}}:{{"{{"}} .Data.password {{"}}"}}@{{ required "database host required" .Values.postgres.host }}:{{ .Values.postgres.port }}/{{ .Values.postgres.database }}
     {{"{{"}}- end -{{"}}"}}
 {{- end -}}
 
