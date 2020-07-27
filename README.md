@@ -1,6 +1,6 @@
 # Meerkat
 
-![Docker Image Version](https://img.shields.io/docker/v/borchero/meerkat-api)
+![Docker Image Version](https://img.shields.io/docker/v/borchero/meerkat-api?sort=semver)
 
 Meerkat provides a cloud-native OpenVPN deployment as well as a simplistic API. This repository
 includes tools to deploy Meerkat on Kubernetes. Meerkat is tightly integrated with
