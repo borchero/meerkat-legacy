@@ -41,7 +41,7 @@ spec:
         {{- else if eq $.Values.vpn.dns.ip.kind "nodeIP" }}
         nodeIP:
             matchLabels:
-                {{- toYaml $.Values.vpn.dns.ip.nodeLabels | indent 12 }}
+{{ toYaml $.Values.vpn.dns.ip.nodeLabels | indent 16 }}
             type: ExternalIP
         {{- end }}
     {{ end -}}

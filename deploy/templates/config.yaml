@@ -17,7 +17,7 @@ data:
 
     VPN_DEVICE: tun
     VPN_HOST: {{ .Values.dns.subdomains.vpn }}.{{ .Values.dns.domain }}
-    VPN_PORT: {{ include "vpn.port" .Values.vpn.service }}
+    VPN_PORT: {{ include "vpn.port" .Values.vpn.service | quote }}
     VPN_PROTOCOL: {{ .Values.vpn.service.protocol | lower }}
     VPN_AUTH: {{ .Values.vpn.config.auth }}
     VPN_CIPHER: {{ .Values.vpn.config.cipher }}
