@@ -4,7 +4,7 @@ WORKDIR /app
 COPY package.json /app/package.json
 RUN npm install --loglevel verbose
 
-COPY . /app
+COPY api /app
 RUN npm run build
 
 EXPOSE 3000
