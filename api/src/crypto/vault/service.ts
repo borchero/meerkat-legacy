@@ -1,4 +1,3 @@
-import * as fs from 'fs';
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as vault from 'node-vault';
@@ -12,14 +11,17 @@ export class VaultService {
         this.vault = vault({
             apiVersion: this.config.get<string>('vault.version'),
             endpoint: this.config.get<string>('vault.endpoint'),
-            token: this.config.get<string>('vault.token')
+            token: this.config.get<string>('vault.token'),
+            requestOptions: {
+                ca: this.config.get<string>('vault.ca')
+            }
         });
     }
 
     async readTlsAuth(): Promise<string> {
         const path = this.config.get<string>('vault.tlsAuth');
         const content = await this.vault.read(path);
-        return content;
+        return content.data.data.value;
     }
 
     async createCertificate(name: string): Promise<IClientCertificate> {

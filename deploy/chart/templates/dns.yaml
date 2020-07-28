@@ -7,7 +7,7 @@ metadata:
     name: {{ .Release.Name }}-api
 
 spec:
-    hosts: ["{{ .Values.api.dns.subdomain }}"]
+    hosts: ["{{ required "subdomain for API required" .Values.dns.subdomains.api }}"]
     tls:
         certificateName: {{ .Release.Name }}-api
         secretName: {{ .Release.Name }}-api-tls
@@ -29,7 +29,7 @@ metadata:
     name: {{ .Release.Name }}-vpn
 
 spec:
-    hosts: ["{{ .Values.dns.subdomains.vpn }}"]
+    hosts: ["{{ required "subdomain for VPN required" .Values.dns.subdomains.vpn }}"]
     zones:
     {{ range .Values.vpn.dns.zones -}}
     -   name: {{ . }}

@@ -7,6 +7,13 @@ export default () => {
 
     const tokenFile = process.env.VAULT_TOKEN_FILE;
     const token = fs.readFileSync(tokenFile);
+
+    const caFile = process.env.VAULT_CA_CRT_FILE;
+    var ca = "";
+    if (caFile) {
+        ca = fs.readFileSync(caFile).toString().trim();
+    }
+
     return {
         vault: {
             version: 'v1',
@@ -14,6 +21,7 @@ export default () => {
             token: token.toString().trim(),
             pki: process.env.VAULT_PKI,
             tlsAuth: process.env.VAULT_TLS_AUTH,
+            ca: ca
         },
     };
 };

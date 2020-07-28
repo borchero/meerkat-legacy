@@ -1,0 +1,14 @@
+vault:
+    host: vault.example.com
+    roles:
+        vpn: meerkat-vpn
+        api: meerkat-api
+
+dns:
+    domain: example.com
+
+postgres:
+    host: postgres.example.com
+    credentials:
+        username: postgres
+        password: postgres

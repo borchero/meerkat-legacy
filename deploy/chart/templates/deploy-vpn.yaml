@@ -19,13 +19,22 @@ spec:
                 app.kubernetes.io/name: {{ .Release.Name }}-vpn
             annotations:
                 vault.hashicorp.com/agent-inject: "true"
-                vault.hashicorp.com/role: {{ .Values.vault.roles.vpn }}
+                vault.hashicorp.com/agent-requests-cpu: 10m
+                {{ if .Values.vault.ca.secretName }}
+                vault.hashicorp.com/ca-cert: /vault/tls/{{ .Values.vault.ca.key }}
+                vault.hashicorp.com/tls-secret: {{ .Values.vault.ca.secretName }}
+                {{ end }}
+                vault.hashicorp.com/role: {{ required "vault role for VPN required " .Values.vault.roles.vpn }}
                 {{ include "vault.kv-value" (dict "root" $ "name" "dh-params") | indent 16 }}
                 {{ include "vault.kv-value" (dict "root" $ "name" "tls-auth") | indent 16 }}
                 {{ include "vault.pki-cert" (dict "root" $ "name" "certificate") | indent 16 }}
                 {{ include "vault.pki-cert" (dict "root" $ "name" "private_key") | indent 16 }}
                 {{ include "vault.pki-cert" (dict "root" $ "name" "issuing_ca") | indent 16 }}
-                vault.hashicorp.com/agent-inject-secret-crl: {{ .Values.vault.paths.pki }}/crl/pem
+                vault.hashicorp.com/agent-inject-secret-crl: {{ .Values.vault.paths.pki }}/cert/crl
+                vault.hashicorp.com/agent-inject-template-crl: |
+                    {{"{{"}}- with secret "{{ .Values.vault.paths.pki }}/cert/crl" {{"}}"}}
+                    {{"{{"}} .Data.certificate {{"}}"}}
+                    {{"{{"}}- end -{{"}}"}}
 
         spec:
             serviceAccountName: {{ .Values.vpn.serviceAccountName }}
@@ -33,7 +42,7 @@ spec:
             -   name: vpn
                 image: {{ .Values.vpn.image.name }}:{{ .Values.vpn.image.tag }}
                 imagePullPolicy: {{ .Values.vpn.image.pullPolicy }}
-                command: ["openvpn", "--config", "/etc/openvpn/server.conf"]
+                args: ["/etc/openvpn/server.conf"]
                 securityContext:
                     capabilities:
                         add: ["NET_ADMIN"]

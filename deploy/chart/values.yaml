@@ -7,7 +7,9 @@ vault:
     paths:
         kv: kv/meerkat
         pki: pki/meerkat
-        database: ~
+    ca:
+        secretName: ~
+        key: vault.ca
 
 dns:
     domain: ~
@@ -19,6 +21,11 @@ postgres:
     host: ~
     port: 5432
     database: meerkat
+    credentials:
+        type: static # one of ['static', 'vault']
+        username: ~
+        password: ~
+        vaultPath: ~
 
 rbac:
     create: false
@@ -30,9 +37,15 @@ vpn:
         tag: ${CIRCLE_TAG}
         pullPolicy: IfNotPresent
     config:
-        tunnelAllTraffic: false
+        redirectGateway: false
         auth: SHA384
         cipher: AES-256-GCM
+        routes:
+        -   subnet: 10.0.0.0
+            mask: 255.0.0.0
+        nameservers:
+        -   8.8.8.8
+        -   8.8.4.4
     service:
         type: LoadBalancer
         protocol: UDP

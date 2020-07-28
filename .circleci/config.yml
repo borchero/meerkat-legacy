@@ -1,6 +1,13 @@
 version: 2.1
 
 jobs:
+  lint-chart:
+    docker:
+    - image: alpine/helm:3.24
+    steps:
+      - checkout
+      - run: deploy/tests/lint.sh
+
   upload-chart:
     docker:
       - image: alpine/git:latest
@@ -13,7 +20,7 @@ jobs:
           git clone git@github.com:borchero/helm-charts.git
 
           export DEST=helm-charts/charts/meerkat@${CIRCLE_TAG}
-          mv project/deploy ${DEST}
+          mv project/deploy/chart ${DEST}
 
           envsubst < ${DEST}/values.yaml > ${DEST}/values.subst.yaml
           mv ${DEST}/values.subst.yaml ${DEST}/values.yaml
@@ -32,6 +39,7 @@ workflows:
   version: 2
   deploy:
     jobs:
+      - lint-chart
       - upload-chart:
           filters:
             branches:

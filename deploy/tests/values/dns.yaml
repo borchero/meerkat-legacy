@@ -1,0 +1,33 @@
+vault:
+    host: vault.example.com
+    roles:
+        vpn: meerkat-vpn
+        api: meerkat-api
+    ca:
+        secretName: vault-tls
+
+dns:
+    domain: example.com
+
+postgres:
+    host: postgres.example.com
+    credentials:
+        type: vault
+        vaultPath: database/creds/meerkat
+
+vpn:
+    enabled: true
+    zones: [public]
+    config:
+        nameservers: [169.254.169.254]
+        routes:
+        -   subnet: 10.0.0.3
+
+api:
+    dns:
+        enabled: true
+        zones: [private]
+        tls:
+            issuer:
+                kind: ClusterIssuer
+                name: issuer

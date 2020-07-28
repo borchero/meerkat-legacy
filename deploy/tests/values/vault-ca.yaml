@@ -1,0 +1,16 @@
+vault:
+    host: vault.example.com
+    roles:
+        vpn: meerkat-vpn
+        api: meerkat-api
+    ca:
+        secretName: vault-tls
+
+dns:
+    domain: example.com
+
+postgres:
+    host: postgres.example.com
+    credentials:
+        type: vault
+        vaultPath: database/creds/meerkat

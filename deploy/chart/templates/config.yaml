@@ -6,7 +6,11 @@ metadata:
     name: {{ .Release.Name }}-api-env
 
 data:
+    {{- if eq .Values.postgres.credentials.type "static" }}
+    DB_CONNECTION_FILE: /run/secrets/db-credentials
+    {{- else }}
     DB_CONNECTION_FILE: /vault/secrets/db-credentials
+    {{- end }}
 
     VAULT_SCHEME: https
     VAULT_HOST: {{ .Values.vault.host }}
@@ -14,6 +18,9 @@ data:
     VAULT_PKI: {{ .Values.vault.paths.pki }}
     VAULT_TLS_AUTH: {{ .Values.vault.paths.kv }}/data/tls-auth
     VAULT_TOKEN_FILE: /vault/secrets/token
+    {{- if .Values.vault.ca.secretName }}
+    VAULT_CA_CRT_FILE: /run/secrets/vault-ca/{{ .Values.vault.ca.key }}
+    {{- end }}
 
     VPN_DEVICE: tun
     VPN_HOST: {{ .Values.dns.subdomains.vpn }}.{{ .Values.dns.domain }}
@@ -35,7 +42,9 @@ data:
         group nogroup
 
         status /tmp/openvpn.log
+        {{- if eq (.Values.vpn.service.protocol | lower) "udp" }}
         explicit-exit-notify 1
+        {{- end }}
 
         server 192.168.255.0 255.255.255.0
         port 1194
@@ -58,15 +67,18 @@ data:
         persist-tun
         verb 3
 
-        compress lz4-v2
-        push "compress lz4-v2"
-        push "comp-lzo no"
-
         push "route 192.168.255.0 255.255.255.0"
-        push "route 10.0.0.0 255.0.0.0"
-        push "dhcp-option DNS 8.8.8.8"
-        push "dhcp-option DNS 8.8.4.4"
+        {{- range .Values.vpn.config.routes }}
+        {{- if .mask }}
+        push "route {{ .subnet }} {{ .mask }}"
+        {{- else }}
+        push "route {{ .subnet }}"
+        {{- end }}
+        {{- end }}
+        {{- range .Values.vpn.config.nameservers }}
+        push "dhcp-option DNS {{ . }}"
+        {{- end }}
 
-        {{- if .Values.vpn.config.tunnelAllTraffic }}
+        {{- if .Values.vpn.config.redirectGateway }}
         push "redirect-gateway def1"
         {{- end }}
