@@ -3,7 +3,7 @@ version: 2.1
 jobs:
   lint-chart:
     docker:
-    - image: alpine/helm:3.24
+    - image: alpine/helm:3.2.4
     steps:
       - checkout
       - run: deploy/tests/lint.sh
