@@ -1,6 +1,6 @@
 set -o errexit
 
-ROOT=$(dirname ${BASH_SOURCE[0]})
+ROOT=`pwd`/deploy/tests
 
 for file in $ROOT/values/*.yaml; do
     echo "Linting $file..."
