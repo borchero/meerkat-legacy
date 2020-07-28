@@ -6,7 +6,7 @@ jobs:
     - image: alpine/helm:3.2.4
     steps:
       - checkout
-      - run: deploy/tests/lint.sh
+      - run: /bin/sh deploy/tests/lint.sh
 
   upload-chart:
     docker:
