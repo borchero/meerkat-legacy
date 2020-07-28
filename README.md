@@ -44,8 +44,8 @@ module "meerkat" {
 Additional configuration options are documented
 [here](https://registry.terraform.io/modules/borchero/meerkat/vault?tab=inputs).
 
-Meerkat also expects to receive database credentials from Vault. Database configuration is,
-however, not included in the Terraform module.
+Optionally, Meerkat can also be configured to receive database credentials from Vault. The
+corresponding configuration is, however, not included in the Terraform module.
 
 ### Deploying Meerkat
 
