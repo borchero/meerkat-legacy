@@ -18,6 +18,7 @@ spec:
             labels:
                 app.kubernetes.io/name: {{ .Release.Name }}-vpn
             annotations:
+{{ toYaml .Values.vpn.podAnnotations | indent 16 }}
                 vault.hashicorp.com/agent-inject: "true"
                 vault.hashicorp.com/agent-requests-cpu: 10m
                 {{ if .Values.vault.ca.secretName }}
