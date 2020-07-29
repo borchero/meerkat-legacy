@@ -2,11 +2,19 @@
 
 ![Docker Image Version](https://img.shields.io/docker/v/borchero/meerkat-api?sort=semver)
 
-Meerkat provides a cloud-native OpenVPN deployment as well as a simplistic API. This repository
-includes tools to deploy Meerkat on Kubernetes. Meerkat is tightly integrated with
-[Vault](https://www.vaultproject.io/) to securely manage certificates.
+Meerkat provides a cloud-native OpenVPN deployment that is tightly integrated with
+[Vault](https://www.vaultproject.io/) to securely provision client certificates.
 
-**_The API is currently very minimal and not suited for any serious production environments._**
+Compared to existing solutions, Meerkat has the following advantages:
+
+- Certificates (especially the CA root certificate) are managed securely and cannot be
+  accessed easily.
+- Users can be managed via an HTTP API and certificates can be created/revoked dynamically.
+  This also allows for easily adding a GUI in the future.
+- Meerkat can be deployed fully automatically on Kubernetes, i.e. no manual steps are
+  required.
+
+**_The HTTP API is currently very minimal and not suited for any serious production environments._**
 
 ## Deployment
 
@@ -44,13 +52,10 @@ module "meerkat" {
 Additional configuration options are documented
 [here](https://registry.terraform.io/modules/borchero/meerkat/vault?tab=inputs).
 
-Meerkat also expects to receive database credentials from Vault. Database configuration is,
-however, not included in the Terraform module.
-
 ### Deploying Meerkat
 
-Using [Helm](https://helm.sh/), Meerkat itself can eventually be deployed as follows. Make sure
-that you set the values according to your prior steps.
+Using [Helm](https://helm.sh/), Meerkat itself can be deployed as follows. Make sure that you set
+the values according to your prior steps.
 
 ```
 helm repo add borchero https://charts.borchero.com
