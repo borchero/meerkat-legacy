@@ -18,6 +18,7 @@ spec:
             labels:
                 app.kubernetes.io/name: {{ .Release.Name }}-api
             annotations:
+{{ toYaml .Values.api.podAnnotations | indent 16 }}
                 vault.hashicorp.com/agent-inject: "true"
                 vault.hashicorp.com/agent-requests-cpu: 10m
                 vault.hashicorp.com/agent-inject-token: "true"

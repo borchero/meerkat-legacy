@@ -32,6 +32,7 @@ rbac:
 
 vpn:
     serviceAccountName: meerkat-vpn
+    podAnnotations: {}
     image:
         name: borchero/meerkat-vpn
         tag: ${CIRCLE_TAG}
@@ -60,6 +61,7 @@ vpn:
 
 api:
     serviceAccountName: meerkat-api
+    podAnnotations: {}
     image:
         name: borchero/meerkat-api
         tag: ${CIRCLE_TAG}
