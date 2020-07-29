@@ -20,6 +20,8 @@ data:
     VAULT_TOKEN_FILE: /vault/secrets/token
     {{- if .Values.vault.ca.secretName }}
     VAULT_CA_CRT_FILE: /run/secrets/vault-ca/{{ .Values.vault.ca.key }}
+    {{- else }}
+    VAULT_CA_CRT_FILE: /run/secrets/kubernetes.io/serviceaccount/ca.crt
     {{- end }}
 
     VPN_DEVICE: tun
