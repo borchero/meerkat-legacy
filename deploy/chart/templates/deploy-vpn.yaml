@@ -23,6 +23,8 @@ spec:
                 {{ if .Values.vault.ca.secretName }}
                 vault.hashicorp.com/ca-cert: /vault/tls/{{ .Values.vault.ca.key }}
                 vault.hashicorp.com/tls-secret: {{ .Values.vault.ca.secretName }}
+                {{ else }}
+                vault.hashicorp.com/ca-cert: /run/secrets/kubernetes.io/serviceaccount/ca.crt
                 {{ end }}
                 vault.hashicorp.com/role: {{ required "vault role for VPN required " .Values.vault.roles.vpn }}
                 {{ include "vault.kv-value" (dict "root" $ "name" "dh-params") | indent 16 }}
