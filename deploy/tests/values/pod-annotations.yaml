@@ -3,6 +3,7 @@ vault:
     roles:
         vpn: meerkat-vpn
         api: meerkat-api
+        cron: meerkat-cron
 
 dns:
     domain: example.com

@@ -4,6 +4,7 @@ vault:
     roles:
         vpn: ~
         api: ~
+        cron: ~
     paths:
         kv: kv/meerkat
         pki: pki/meerkat
@@ -85,3 +86,10 @@ api:
             issuer:
                 kind: ~
                 name: ~
+
+cron:
+    serviceAccountName: meerkat-vpn-cron
+    image:
+        name: borchero/meerkat-cron
+        tag: ${CIRCLE_TAG}
+        pullPolicy: IfNotPresent
