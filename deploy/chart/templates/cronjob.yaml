@@ -15,7 +15,7 @@ spec:
             activeDeadlineSeconds: 60
             template:
                 restartPolicy: OnFailure
-                serviceAccountName: {{ .Vaues.cron.serviceAccountName }}
+                serviceAccountName: {{ .Values.cron.serviceAccountName }}
                 containers:
                 -   name: script
                     image: {{ .Values.cron.image.name }}:{{ .Values.cron.image.tag }}
