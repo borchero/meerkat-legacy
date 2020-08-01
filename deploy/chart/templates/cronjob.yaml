@@ -24,6 +24,6 @@ spec:
                     -   name: VAULT_ADDR
                         value: https://{{ .Values.vault.host }}:{{ .Values.vault.port }}
                     -   name: VAULT_ROLE
-                        value: {{ required "cron role for Vault is required" .Values.roles.cron }}
+                        value: {{ required "cron role for Vault is required" .Values.vault.roles.cron }}
                     -   name: VAULT_PKI_PATH
                         value: {{ .Values.vault.paths.pki }}
