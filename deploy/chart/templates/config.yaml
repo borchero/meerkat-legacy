@@ -1,86 +1,85 @@
+apiVersion: v1
+kind: ConfigMap
+
+metadata:
+  name: {{ .Release.Name }}-api-env
+
+data:
+  {{- if eq .Values.postgres.credentials.type "static" }}
+  DB_CONNECTION_FILE: /run/secrets/db-credentials
+  {{- else }}
+  DB_CONNECTION_FILE: /vault/secrets/db-credentials
+  {{- end }}
+
+  VAULT_SCHEME: https
+  VAULT_HOST: {{ .Values.vault.host }}
+  VAULT_PORT: {{ .Values.vault.port | quote }}
+  VAULT_PKI: {{ .Values.vault.paths.pki }}
+  VAULT_TLS_AUTH: {{ .Values.vault.paths.kv }}/data/tls-auth
+  VAULT_TOKEN_FILE: /vault/secrets/token
+  {{- if .Values.vault.ca.secretName }}
+  VAULT_CA_CRT_FILE: /run/secrets/vault-ca/{{ .Values.vault.ca.key }}
+  {{- else }}
+  VAULT_CA_CRT_FILE: /run/secrets/kubernetes.io/serviceaccount/ca.crt
+  {{- end }}
+
+  VPN_DEVICE: tun
+  VPN_HOST: {{ .Values.dns.subdomains.vpn }}.{{ .Values.dns.domain }}
+  VPN_PORT: {{ include "vpn.port" .Values.vpn.service | quote }}
+  VPN_PROTOCOL: {{ .Values.vpn.service.protocol | lower }}
+  VPN_AUTH: {{ .Values.vpn.config.auth }}
+  VPN_CIPHER: {{ .Values.vpn.config.cipher }}
+
 ---
 apiVersion: v1
 kind: ConfigMap
 
 metadata:
-    name: {{ .Release.Name }}-api-env
+  name: {{ .Release.Name }}-vpn-conf
 
 data:
-    {{- if eq .Values.postgres.credentials.type "static" }}
-    DB_CONNECTION_FILE: /run/secrets/db-credentials
-    {{- else }}
-    DB_CONNECTION_FILE: /vault/secrets/db-credentials
+  server.conf: |
+    user nobody
+    group nogroup
+
+    status /tmp/openvpn.log
+    {{- if eq (.Values.vpn.service.protocol | lower) "udp" }}
+    explicit-exit-notify 1
     {{- end }}
 
-    VAULT_SCHEME: https
-    VAULT_HOST: {{ .Values.vault.host }}
-    VAULT_PORT: {{ .Values.vault.port | quote }}
-    VAULT_PKI: {{ .Values.vault.paths.pki }}
-    VAULT_TLS_AUTH: {{ .Values.vault.paths.kv }}/data/tls-auth
-    VAULT_TOKEN_FILE: /vault/secrets/token
-    {{- if .Values.vault.ca.secretName }}
-    VAULT_CA_CRT_FILE: /run/secrets/vault-ca/{{ .Values.vault.ca.key }}
+    server 192.168.255.0 255.255.255.0
+    port 1194
+    proto {{ .Values.vpn.service.protocol | lower }}
+    dev tun0
+
+    cert /vault/secrets/certificate
+    key /vault/secrets/private_key
+    ca /vault/secrets/issuing_ca
+    dh /vault/secrets/dh-params
+    tls-crypt /vault/secrets/tls-auth
+    crl-verify /vault/secrets/crl
+
+    auth {{ .Values.vpn.config.auth }}
+    cipher {{ .Values.vpn.config.cipher }}
+
+    keepalive 10 60
+    key-direction 0
+    persist-key
+    persist-tun
+    verb 3
+
+    push "route 192.168.255.0 255.255.255.0"
+    {{- range .Values.vpn.config.routes }}
+    {{- if .mask }}
+    push "route {{ .subnet }} {{ .mask }}"
     {{- else }}
-    VAULT_CA_CRT_FILE: /run/secrets/kubernetes.io/serviceaccount/ca.crt
+    push "route {{ .subnet }}"
+    {{- end }}
+    {{- end }}
+    {{- range .Values.vpn.config.nameservers }}
+    push "dhcp-option DNS {{ . }}"
     {{- end }}
 
-    VPN_DEVICE: tun
-    VPN_HOST: {{ .Values.dns.subdomains.vpn }}.{{ .Values.dns.domain }}
-    VPN_PORT: {{ include "vpn.port" .Values.vpn.service | quote }}
-    VPN_PROTOCOL: {{ .Values.vpn.service.protocol | lower }}
-    VPN_AUTH: {{ .Values.vpn.config.auth }}
-    VPN_CIPHER: {{ .Values.vpn.config.cipher }}
-
----
-apiVersion: v1
-kind: ConfigMap
-
-metadata:
-    name: {{ .Release.Name }}-vpn-conf
-
-data:
-    server.conf: |
-        user nobody
-        group nogroup
-
-        status /tmp/openvpn.log
-        {{- if eq (.Values.vpn.service.protocol | lower) "udp" }}
-        explicit-exit-notify 1
-        {{- end }}
-
-        server 192.168.255.0 255.255.255.0
-        port 1194
-        proto {{ .Values.vpn.service.protocol | lower }}
-        dev tun0
-
-        cert /vault/secrets/certificate
-        key /vault/secrets/private_key
-        ca /vault/secrets/issuing_ca
-        dh /vault/secrets/dh-params
-        tls-crypt /vault/secrets/tls-auth
-        crl-verify /vault/secrets/crl
-
-        auth {{ .Values.vpn.config.auth }}
-        cipher {{ .Values.vpn.config.cipher }}
-
-        keepalive 10 60
-        key-direction 0
-        persist-key
-        persist-tun
-        verb 3
-
-        push "route 192.168.255.0 255.255.255.0"
-        {{- range .Values.vpn.config.routes }}
-        {{- if .mask }}
-        push "route {{ .subnet }} {{ .mask }}"
-        {{- else }}
-        push "route {{ .subnet }}"
-        {{- end }}
-        {{- end }}
-        {{- range .Values.vpn.config.nameservers }}
-        push "dhcp-option DNS {{ . }}"
-        {{- end }}
-
-        {{- if .Values.vpn.config.redirectGateway }}
-        push "redirect-gateway def1"
-        {{- end }}
+    {{- if .Values.vpn.config.redirectGateway }}
+    push "redirect-gateway def1"
+    {{- end }}

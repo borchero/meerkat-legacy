@@ -3,63 +3,63 @@ apiVersion: apps/v1
 kind: Deployment
 
 metadata:
-    name: {{ .Release.Name }}-vpn
+  name: {{ .Release.Name }}-vpn
 
 spec:
-    replicas: 1
-    strategy:
-        type: Recreate
-    selector:
-        matchLabels:
-            app.kubernetes.io/name: {{ .Release.Name }}-vpn
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ .Release.Name }}-vpn
 
-    template:
-        metadata:
-            labels:
-                app.kubernetes.io/name: {{ .Release.Name }}-vpn
-            annotations:
-                {{ if gt (len .Values.vpn.podAnnotations) 0 }}
-{{ toYaml .Values.vpn.podAnnotations | indent 16 }}
-                {{ end }}
-                vault.hashicorp.com/agent-inject: "true"
-                vault.hashicorp.com/agent-requests-cpu: 10m
-                {{ if .Values.vault.ca.secretName }}
-                vault.hashicorp.com/ca-cert: /vault/tls/{{ .Values.vault.ca.key }}
-                vault.hashicorp.com/tls-secret: {{ .Values.vault.ca.secretName }}
-                {{ else }}
-                vault.hashicorp.com/ca-cert: /run/secrets/kubernetes.io/serviceaccount/ca.crt
-                {{ end }}
-                vault.hashicorp.com/role: {{ required "vault role for VPN required " .Values.vault.roles.vpn }}
-                {{ include "vault.kv-value" (dict "root" $ "name" "dh-params") | indent 16 }}
-                {{ include "vault.kv-value" (dict "root" $ "name" "tls-auth") | indent 16 }}
-                {{ include "vault.pki-cert" (dict "root" $ "name" "certificate") | indent 16 }}
-                {{ include "vault.pki-cert" (dict "root" $ "name" "private_key") | indent 16 }}
-                {{ include "vault.pki-cert" (dict "root" $ "name" "issuing_ca") | indent 16 }}
-                vault.hashicorp.com/agent-inject-secret-crl: {{ .Values.vault.paths.pki }}/cert/crl
-                vault.hashicorp.com/agent-inject-template-crl: |
-                    {{"{{"}}- with secret "{{ .Values.vault.paths.pki }}/cert/crl" {{"}}"}}
-                    {{"{{"}} .Data.certificate {{"}}"}}
-                    {{"{{"}}- end -{{"}}"}}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ .Release.Name }}-vpn
+      annotations:
+        {{ if gt (len .Values.vpn.podAnnotations) 0 }}
+{{ toYaml .Values.vpn.podAnnotations | indent 8 }}
+        {{ end }}
+        vault.hashicorp.com/agent-inject: "true"
+        vault.hashicorp.com/agent-requests-cpu: 10m
+        {{ if .Values.vault.ca.secretName }}
+        vault.hashicorp.com/ca-cert: /vault/tls/{{ .Values.vault.ca.key }}
+        vault.hashicorp.com/tls-secret: {{ .Values.vault.ca.secretName }}
+        {{ else }}
+        vault.hashicorp.com/ca-cert: /run/secrets/kubernetes.io/serviceaccount/ca.crt
+        {{ end }}
+        vault.hashicorp.com/role: {{ required "vault role for VPN required" .Values.vault.roles.vpn }}
+        {{ include "vault.kv-value" (dict "root" $ "name" "dh-params") | indent 8 }}
+        {{ include "vault.kv-value" (dict "root" $ "name" "tls-auth") | indent 8 }}
+        {{ include "vault.pki-cert" (dict "root" $ "name" "certificate") | indent 8 }}
+        {{ include "vault.pki-cert" (dict "root" $ "name" "private_key") | indent 8 }}
+        {{ include "vault.pki-cert" (dict "root" $ "name" "issuing_ca") | indent 8 }}
+        vault.hashicorp.com/agent-inject-secret-crl: {{ .Values.vault.paths.pki }}/cert/crl
+        vault.hashicorp.com/agent-inject-template-crl: |
+          {{"{{"}}- with secret "{{ .Values.vault.paths.pki }}/cert/crl" {{"}}"}}
+          {{"{{"}} .Data.certificate {{"}}"}}
+          {{"{{"}}- end -{{"}}"}}
 
-        spec:
-            serviceAccountName: {{ .Values.vpn.serviceAccountName }}
-            containers:
-            -   name: vpn
-                image: {{ .Values.vpn.image.name }}:{{ .Values.vpn.image.tag }}
-                imagePullPolicy: {{ .Values.vpn.image.pullPolicy }}
-                args: ["/etc/openvpn/server.conf"]
-                securityContext:
-                    capabilities:
-                        add: ["NET_ADMIN"]
-                ports:
-                -   name: openvpn
-                    containerPort: 1194
-                    protocol: {{ .Values.vpn.service.protocol | upper }}
-                volumeMounts:
-                -   name: server-config
-                    mountPath: /etc/openvpn
-                    readOnly: true
-            volumes:
-            -   name: server-config
-                configMap:
-                    name: {{ .Release.Name }}-vpn-conf
+    spec:
+      serviceAccountName: {{ .Values.vpn.serviceAccountName }}
+      containers:
+      - name: vpn
+        image: {{ .Values.vpn.image.name }}:{{ .Values.vpn.image.tag }}
+        imagePullPolicy: {{ .Values.vpn.image.pullPolicy }}
+        args: ["/etc/openvpn/server.conf"]
+        securityContext:
+          capabilities:
+            add: ["NET_ADMIN"]
+        ports:
+        - name: openvpn
+          containerPort: 1194
+          protocol: {{ .Values.vpn.service.protocol | upper }}
+        volumeMounts:
+        - name: server-config
+          mountPath: /etc/openvpn
+          readOnly: true
+      volumes:
+      - name: server-config
+        configMap:
+          name: {{ .Release.Name }}-vpn-conf

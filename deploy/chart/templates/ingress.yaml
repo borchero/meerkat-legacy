@@ -4,25 +4,25 @@ apiVersion: traefik.containo.us/v1alpha1
 kind: IngressRoute
 
 metadata:
-    name: {{ .Release.Name }}-api
+  name: {{ .Release.Name }}-api
 
 spec:
-    entryPoints: {{ .Values.api.ingress.entrypoints }}
-    routes:
-    -   kind: Rule
-        match: Host(`{{ .Values.dns.subdomains.api }}.{{ .Values.dns.domain }}`)
-        middlewares:
-        -   name: {{ .Release.Name }}-api-basic-auth
-            namespace: {{ .Release.Namespace }}
-        services:
-        -   kind: Service
-            name: {{ .Release.Name }}
-            namespace: {{ .Release.Namespace }}
-            port: {{ .Values.api.service.port }}
-        {{- if .Values.api.dns.enabled }}
-        tls:
-            secretName: {{ .Release.Name }}-api-tls
-        {{- end }}
+  entryPoints: {{ .Values.api.ingress.entrypoints }}
+  routes:
+  - kind: Rule
+    match: Host(`{{ .Values.dns.subdomains.api }}.{{ .Values.dns.domain }}`)
+    middlewares:
+    - name: {{ .Release.Name }}-api-basic-auth
+      namespace: {{ .Release.Namespace }}
+    services:
+    - kind: Service
+      name: {{ .Release.Name }}
+      namespace: {{ .Release.Namespace }}
+      port: {{ .Values.api.service.port }}
+    {{- if .Values.api.dns.enabled }}
+    tls:
+      secretName: {{ .Release.Name }}-api-tls
+    {{- end }}
 
 {{- if .Values.api.ingress.auth.enabled }}
 ---
@@ -30,25 +30,25 @@ apiVersion: traefik.containo.us/v1alpha1
 kind: Middleware
 
 metadata:
-    name: {{ .Release.Name }}-api-basic-auth
+  name: {{ .Release.Name }}-api-basic-auth
 
 spec:
-    basicAuth:
-        secret: {{ .Release.Name }}-api-basic-auth-credentials
-        removeHeader: true
+  basicAuth:
+    secret: {{ .Release.Name }}-api-basic-auth-credentials
+    removeHeader: true
 
 ---
 apiVersion: v1
 kind: Secret
 
 metadata:
-    name: {{ .Release.Name }}-api-basic-auth-credentials
+  name: {{ .Release.Name }}-api-basic-auth-credentials
 
 stringData:
-    users: |
-        {{ range .Values.api.ingress.auth.users -}}
-        {{ . }}
-        {{ end -}}
+  users: |
+    {{ range .Values.api.ingress.auth.users -}}
+    {{ . }}
+    {{ end -}}
 
 {{- end }}
 {{- end }}

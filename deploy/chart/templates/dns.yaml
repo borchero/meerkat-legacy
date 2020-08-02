@@ -4,20 +4,20 @@ apiVersion: switchboard.borchero.com/v1alpha1
 kind: DNSRecord
 
 metadata:
-    name: {{ .Release.Name }}-api
+  name: {{ .Release.Name }}-api
 
 spec:
-    hosts: ["{{ required "subdomain for API required" .Values.dns.subdomains.api }}"]
-    tls:
-        certificateName: {{ .Release.Name }}-api
-        secretName: {{ .Release.Name }}-api-tls
-        issuer:
-            kind: {{ required "tls issuer kind required" .Values.api.dns.tls.issuer.kind }}
-            name: {{ required "tls issuer name required" .Values.api.dns.tls.issuer.name }}
-    zones:
-    {{- range $i, $val := .Values.api.dns.zones }}
-    -   name: {{ $val }}
-    {{- end }}
+  hosts: ["{{ required "subdomain for API required" .Values.dns.subdomains.api }}"]
+  tls:
+    certificateName: {{ .Release.Name }}-api
+    secretName: {{ .Release.Name }}-api-tls
+    issuer:
+      kind: {{ required "tls issuer kind required" .Values.api.dns.tls.issuer.kind }}
+      name: {{ required "tls issuer name required" .Values.api.dns.tls.issuer.name }}
+  zones:
+  {{- range $i, $val := .Values.api.dns.zones }}
+  - name: {{ $val }}
+  {{- end }}
 {{- end }}
 
 {{- if .Values.vpn.dns.enabled }}
@@ -26,24 +26,24 @@ apiVersion: switchboard.borchero.com/v1alpha1
 kind: DNSRecord
 
 metadata:
-    name: {{ .Release.Name }}-vpn
+  name: {{ .Release.Name }}-vpn
 
 spec:
-    hosts: ["{{ required "subdomain for VPN required" .Values.dns.subdomains.vpn }}"]
-    zones:
-    {{ range .Values.vpn.dns.zones -}}
-    -   name: {{ . }}
-        {{- if eq $.Values.vpn.dns.ip.kind "serviceIP" }}
-        serviceIP:
-            name: {{ $.Release.Name }}-vpn
-            namespace: {{ $.Release.Namespace }}
-            type: ExternalIP
-        {{- else if eq $.Values.vpn.dns.ip.kind "nodeIP" }}
-        nodeIP:
-            matchLabels:
-{{ toYaml $.Values.vpn.dns.ip.nodeLabels | indent 16 }}
-            type: ExternalIP
-        {{- end }}
-    {{ end -}}
+  hosts: ["{{ required "subdomain for VPN required" .Values.dns.subdomains.vpn }}"]
+  zones:
+  {{ range .Values.vpn.dns.zones -}}
+  - name: {{ . }}
+    {{- if eq $.Values.vpn.dns.ip.kind "serviceIP" }}
+    serviceIP:
+      name: {{ $.Release.Name }}-vpn
+      namespace: {{ $.Release.Namespace }}
+      type: ExternalIP
+    {{- else if eq $.Values.vpn.dns.ip.kind "nodeIP" }}
+    nodeIP:
+      matchLabels:
+{{ toYaml $.Values.vpn.dns.ip.nodeLabels | indent 8 }}
+        type: ExternalIP
+    {{- end }}
+{{- end }}
 
 {{- end }}

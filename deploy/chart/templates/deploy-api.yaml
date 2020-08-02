@@ -1,75 +1,74 @@
----
 apiVersion: apps/v1
 kind: Deployment
 
 metadata:
-    name: {{ .Release.Name }}-api
+  name: {{ .Release.Name }}-api
 
 spec:
-    replicas: 1
-    strategy:
-        type: RollingUpdate
-    selector:
-        matchLabels:
-            app.kubernetes.io/name: {{ .Release.Name }}-api
+  replicas: 1
+  strategy:
+    type: RollingUpdate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ .Release.Name }}-api
 
-    template:
-        metadata:
-            labels:
-                app.kubernetes.io/name: {{ .Release.Name }}-api
-            annotations:
-                {{ if gt (len .Values.api.podAnnotations) 0 }}
-{{ toYaml .Values.api.podAnnotations | indent 16 }}
-                {{ end }}
-                vault.hashicorp.com/agent-inject: "true"
-                vault.hashicorp.com/agent-requests-cpu: 10m
-                vault.hashicorp.com/agent-inject-token: "true"
-                {{- if .Values.vault.ca.secretName }}
-                vault.hashicorp.com/ca-cert: /vault/tls/{{ .Values.vault.ca.key }}
-                vault.hashicorp.com/tls-secret: {{ .Values.vault.ca.secretName }}
-                {{- else }}
-                vault.hashicorp.com/ca-cert: /run/secrets/kubernetes.io/serviceaccount/ca.crt
-                {{- end }}
-                vault.hashicorp.com/role: {{ required "vault role for API required" .Values.vault.roles.api }}
-                {{- if eq .Values.postgres.credentials.type "vault" }}
-                {{ include "vault.database" . | indent 16 }}
-                {{- end }}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ .Release.Name }}-api
+      annotations:
+        {{ if gt (len .Values.api.podAnnotations) 0 }}
+{{ toYaml .Values.api.podAnnotations | indent 8 }}
+        {{ end }}
+        vault.hashicorp.com/agent-inject: "true"
+        vault.hashicorp.com/agent-requests-cpu: 10m
+        vault.hashicorp.com/agent-inject-token: "true"
+        {{- if .Values.vault.ca.secretName }}
+        vault.hashicorp.com/ca-cert: /vault/tls/{{ .Values.vault.ca.key }}
+        vault.hashicorp.com/tls-secret: {{ .Values.vault.ca.secretName }}
+        {{- else }}
+        vault.hashicorp.com/ca-cert: /run/secrets/kubernetes.io/serviceaccount/ca.crt
+        {{- end }}
+        vault.hashicorp.com/role: {{ required "vault role for API required" .Values.vault.roles.api }}
+        {{- if eq .Values.postgres.credentials.type "vault" }}
+        {{ include "vault.database" . | indent 8 }}
+        {{- end }}
 
-        spec:
-            serviceAccountName: {{ .Values.api.serviceAccountName }}
-            containers:
-            -   name: api
-                image: {{ .Values.api.image.name }}:{{ .Values.api.image.tag }}
-                imagePullPolicy: {{ .Values.api.image.pullPolicy }}
-                envFrom:
-                -   configMapRef:
-                        name: {{ .Release.Name }}-api-env
-                ports:
-                -   name: node
-                    containerPort: 3000
-                    protocol: TCP
-                {{- if or .Values.vault.ca.secretName (eq .Values.postgres.credentials.type "static") }}
-                volumeMounts:
-                {{- if .Values.vault.ca.secretName }}
-                -   name: vault-ca
-                    mountPath: /run/secrets/vault-ca
-                {{- end }}
-                {{- if eq .Values.postgres.credentials.type "static" }}
-                -   name: db-credentials
-                    mountPath: /run/secrets/db-credentials
-                {{- end }}
-                {{- end }}
+    spec:
+      serviceAccountName: {{ .Values.api.serviceAccountName }}
+      containers:
+      - name: api
+        image: {{ .Values.api.image.name }}:{{ .Values.api.image.tag }}
+        imagePullPolicy: {{ .Values.api.image.pullPolicy }}
+        envFrom:
+        - configMapRef:
+            name: {{ .Release.Name }}-api-env
+        ports:
+        - name: node
+          containerPort: 3000
+          protocol: TCP
+        {{- if or .Values.vault.ca.secretName (eq .Values.postgres.credentials.type "static") }}
+        volumeMounts:
+        {{- if .Values.vault.ca.secretName }}
+        - name: vault-ca
+          mountPath: /run/secrets/vault-ca
+        {{- end }}
+        {{- if eq .Values.postgres.credentials.type "static" }}
+        - name: db-credentials
+          mountPath: /run/secrets/db-credentials
+        {{- end }}
+        {{- end }}
 
-            {{- if or .Values.vault.ca.secretName (eq .Values.postgres.credentials.type "static") }}
-            volumes:
-            {{- if .Values.vault.ca.secretName }}
-            -   name: vault-ca
-                secret:
-                    secretName: {{ .Values.vault.ca.secretName }}
-            {{- end }}
-            {{- if eq .Values.postgres.credentials.type "static" }}
-            -   name: db-credentials
-                secret:
-                    secretName: {{ .Release.Name }}-api-db-credentials
-            {{- end }}
-            {{- end }}
+      {{- if or .Values.vault.ca.secretName (eq .Values.postgres.credentials.type "static") }}
+      volumes:
+      {{- if .Values.vault.ca.secretName }}
+      - name: vault-ca
+        secret:
+          secretName: {{ .Values.vault.ca.secretName }}
+      {{- end }}
+      {{- if eq .Values.postgres.credentials.type "static" }}
+      - name: db-credentials
+        secret:
+          secretName: {{ .Release.Name }}-api-db-credentials
+      {{- end }}
+      {{- end }}
