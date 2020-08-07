@@ -11,7 +11,7 @@ VAULT_TOKEN=$(
         --cacert $CA_PATH \
         -d "{\"role\":\"$VAULT_ROLE\",\"jwt\":\"$(cat $JWT_PATH)\"}" \
         $VAULT_ADDR/v1/auth/kubernetes/login |
-    jq .auth.client_token
+    jq -r .auth.client_token
 )
 
 # Then, rotate the CRL
