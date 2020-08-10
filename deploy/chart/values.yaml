@@ -89,6 +89,7 @@ api:
 
 cron:
     serviceAccountName: meerkat-vpn-cron
+    podAnnotations: {}
     image:
         name: borchero/meerkat-cron
         tag: ${CIRCLE_TAG}

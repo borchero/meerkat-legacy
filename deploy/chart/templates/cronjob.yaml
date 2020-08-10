@@ -14,6 +14,11 @@ spec:
       backoffLimit: 10
       activeDeadlineSeconds: 60
       template:
+        {{ if gt (len .Values.cron.podAnnotations) 0 }}
+        metadata:
+          annotations:
+{{ toYaml .Values.cron.podAnnotations | indent 12 }}
+        {{ end }}
         spec:
           restartPolicy: OnFailure
           serviceAccountName: {{ .Values.cron.serviceAccountName }}

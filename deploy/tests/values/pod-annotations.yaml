@@ -21,3 +21,7 @@ vpn:
 api:
     podAnnotations:
         test: foo
+
+cron:
+    podAnnotations:
+        test: foobar
