@@ -1,5 +1,7 @@
 # Meerkat
 
+**This repository is deprecated. Use [borchero/meerkat](https://github.com/borchero/meerkat) instead.**
+
 ![Docker Image Version](https://img.shields.io/docker/v/borchero/meerkat-api?sort=semver)
 
 Meerkat provides a cloud-native OpenVPN deployment that is tightly integrated with
